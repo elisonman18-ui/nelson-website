@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NELSON Electronics — Store</title>
+  <meta name="description" content="Voltica Electronics — modern responsive demo electronics store (HTML + JavaScript single file)">
+  <style>
+    :root{
+      --accent:#0ea5a4; /* teal */
+      --muted:#6b7280;
+      --bg:#0f172a;
+      --card:#0b1220;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      --max-width:1200px;
+      color-scheme: dark;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071022 0%,#081424 60%);color:#e6eef6}
+    .container{max-width:var(--max-width);margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#6366f1);display:flex;align-items:center;justify-content:center;font-weight:700;color:#022}
+    nav a{color:var(--muted);margin:0 10px;text-decoration:none}
+    .searchbar{flex:1;display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:var(--glass);margin-left:18px}
+    .searchbar input{background:transparent;border:0;outline:0;color:inherit;width:100%;font-size:15px}
+    .cta{display:flex;gap:10px;align-items:center}
+    button{background:transparent;border:0;color:inherit;cursor:pointer}
+    .hero{display:flex;gap:20px;align-items:center;margin-top:22px}
+    .hero-left{flex:1}
+    .hero-right{flex:1;display:flex;justify-content:center}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--radius);padding:18px}
+    h1{margin:0;font-size:28px}
+    p.lead{color:var(--muted);margin-top:8px}
+
+    /* product grid */
+    .controls{display:flex;gap:12px;align-items:center;margin-top:16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-top:18px}
+    .product{border-radius:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);display:flex;flex-direction:column;gap:10px}
+    .product img{width:100%;height:160px;object-fit:cover;border-radius:10px}
+    .product .title{font-weight:600}
+    .price{font-weight:700}
+
+    /* cart sidebar */
+    .cart-btn{position:relative}
+    .badge{position:absolute;top:-8px;right:-8px;background:var(--accent);color:#001;padding:6px 8px;border-radius:999px;font-weight:700}
+    .cart-panel{position:fixed;right:18px;top:18px;width:360px;max-width:90%;height:80vh;background:linear-gradient(180deg,#041524, #021018);box-shadow:0 10px 30px rgba(2,6,23,0.6);border-radius:12px;overflow:auto;padding:14px;transform:translateX(20px);transition:0.22s;opacity:0}
+    .cart-panel.open{transform:translateX(0);opacity:1}
+    .cart-item{display:flex;gap:12px;align-items:center;padding:8px;border-radius:10px}
+    .cart-item img{width:72px;height:56px;object-fit:cover;border-radius:8px}
+    .qty{display:flex;gap:6px;align-items:center}
+    .footer-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;z-index:60;}
+    .modal{width:92%;max-width:900px;border-radius:12px;padding:16px;background:linear-gradient(180deg,#071428,#021018)}
+    .modal .left{flex:1}
+    .modal .right{flex:1}
+    .modal-grid{display:flex;gap:10px}
+
+    /* responsive */
+    @media (max-width:720px){
+      .hero{flex-direction:column}
+      .searchbar{margin-left:0}
+      header{flex-direction:column;align-items:flex-start}
+    }
+
+    /* small utilities */
+    .muted{color:var(--muted)}
+    .pill{background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:999px}
+    a.btn{display:inline-block;padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#7c3aed);color:#001;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">V</div>
+        <div>
+          <div style="font-weight:800">NELSON Electronics</div>
+          <div class="muted" style="font-size:12px">Gadgets, audio & home tech</div>
+        </div>
+      </div>
+
+      <div class="searchbar card" style="max-width:520px;">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M21 20l-5.8-5.8"/></svg>
+        <input id="search" placeholder="Search products, e.g. headphones" />
+        <select id="category" style="background:transparent;border:0;color:inherit">
+          <option value="all">All categories</option>
+          <option value="audio">Audio</option>
+          <option value="phone">Phones</option>
+          <option value="laptop">Laptops</option>
+          <option value="accessory">Accessories</option>
+        </select>
+      </div>
+
+      <div class="cta">
+        <div class="pill muted" id="resultSummary">0 products</div>
+        <button class="cart-btn" id="openCart" title="Open cart">
+          <svg width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M3 3h2l.4 2M7 13h10l4-8H5.4"/></svg>
+          <span class="badge" id="cartCount" style="display:none">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-left card">
+          <h1>Find the right tech — fast.</h1>
+          <p class="lead">Hand-picked audio, phones, laptops and accessories. Add to the cart and try the quick checkout demo.</p>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+            <a href="#products" class="btn">Shop now</a>
+            <button id="viewDeals" class="pill muted">Today's deals</button>
+          </div>
+        </div>
+        <div class="hero-right card" style="text-align:center">
+          <img src="https://images.unsplash.com/photo-1510557880182-3c5e44b75f3a?auto=format&fit=crop&w=900&q=70" alt="hero" style="width:100%;max-width:420px;border-radius:12px;"/>
+        </div>
+      </section>
+
+      <section id="products" style="margin-top:18px">
+        <div class="controls">
+          <div class="muted">Sort:</div>
+          <select id="sort" style="background:transparent;border:0;color:inherit">
+            <option value="default">Featured</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="price-desc">Price: High → Low</option>
+          </select>
+
+          <div style="flex:1"></div>
+
+          <div class="muted">Filter:</div>
+          <label class="pill muted"><input type="checkbox" id="inStockOnly" /> In stock only</label>
+        </div>
+
+        <div class="grid" id="grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- cart panel -->
+  <aside id="cartPanel" class="cart-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:800">My cart</div>
+      <button id="closeCart">Close</button>
+    </div>
+    <div id="cartList" style="margin-top:12px"></div>
+    <div class="footer-actions">
+      <div>
+        <div class="muted">Subtotal</div>
+        <div id="subtotal" style="font-weight:800">$0.00</div>
+      </div>
+      <div>
+        <button id="checkout" class="btn">Checkout</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- product modal -->
+  <div id="modalRoot" style="display:none"></div>
+
+  <script>
+  // Sample product data. Replace images/URLs with your own production assets.
+  const PRODUCTS = [
+    {id:1,title:'NoiseX Wireless Headphones',price:129.99,category:'audio',img:'https://images.unsplash.com/photo-1518441902112-9af2e3a2a1d8?auto=format&fit=crop&w=800&q=70',desc:'Comfortable over-ear noise-cancelling headphones.',stock:12},
+    {id:2,title:'Orbit True Wireless Earbuds',price:79.9,category:'audio',img:'https://images.unsplash.com/photo-1570813094615-4d6c4d8e05f6?auto=format&fit=crop&w=800&q=70',desc:'Compact buds with long battery life.',stock:34},
+    {id:3,title:'EdgePhone Pro 6',price:899.0,category:'phone',img:'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=70',desc:'Flagship phone with excellent camera.',stock:6},
+    {id:4,title:'SkyBook 14" Laptop',price:1199.0,category:'laptop',img:'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=70',desc:'Thin, light, powerful.',stock:4},
+    {id:5,title:'ChargeFlex USB-C Cable',price:12.5,category:'accessory',img:'https://images.unsplash.com/photo-1585386959984-a415522e3b03?auto=format&fit=crop&w=800&q=70',desc:'Durable braided charging cable.',stock:120},
+    {id:6,title:'Studio Compact Speaker',price:199.0,category:'audio',img:'https://images.unsplash.com/photo-1526178615487-9fd5b4d2bfa0?auto=format&fit=crop&w=800&q=70',desc:'Rich room-filling sound for home.',stock:8},
+    {id:7,title:'PixelMate 10 Smartwatch',price:249.99,category:'accessory',img:'https://images.unsplash.com/photo-1519744792095-2f2205e87b6f?auto=format&fit=crop&w=800&q=70',desc:'Fitness and notifications on your wrist.',stock:26},
+    {id:8,title:'Traveler Power Bank 20k',price:49.99,category:'accessory',img:'https://images.unsplash.com/photo-1565372912178-8fb5db87c3f6?auto=format&fit=crop&w=800&q=70',desc:'High-capacity portable charger.',stock:50}
+  ];
+
+  // App state
+  const state = {
+    products: PRODUCTS.slice(),
+    cart: loadCart(),
+    filters: {q:'',category:'all',inStock:false,sort:'default'}
+  };
+
+  // helpers
+  function formatPrice(n){return '$' + n.toFixed(2)}
+  function saveCart(){localStorage.setItem('voltica_cart', JSON.stringify(state.cart))}
+  function loadCart(){try{return JSON.parse(localStorage.getItem('voltica_cart'))||[];}catch(e){return []}}
+
+  // render products
+  function renderGrid(){
+    const grid = document.getElementById('grid');grid.innerHTML='';
+    let list = state.products.filter(p=>{
+      if(state.filters.category !== 'all' && p.category !== state.filters.category) return false;
+      if(state.filters.inStock && (!p.stock || p.stock<=0)) return false;
+      if(state.filters.q){const q=state.filters.q.toLowerCase(); if(!(p.title.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q))) return false}
+      return true;
+    });
+
+    // sort
+    if(state.filters.sort === 'price-asc') list.sort((a,b)=>a.price-b.price);
+    if(state.filters.sort === 'price-desc') list.sort((a,b)=>b.price-a.price);
+
+    document.getElementById('resultSummary').textContent = list.length + ' products';
+
+    list.forEach(p=>{
+      const el = document.createElement('div'); el.className='product card';
+      el.innerHTML = `
+        <img loading="lazy" src="${p.img}" alt="${p.title}" />
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="title">${p.title}</div>
+            <div class="muted" style="font-size:13px">${p.category} • ${p.stock>0? 'In stock':'Out of stock'}</div>
+          </div>
+          <div class="price">${formatPrice(p.price)}</div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+          <button data-id="${p.id}" class="view">View</button>
+          <button data-id="${p.id}" class="add">Add to cart</button>
+        </div>
+      `;
+      grid.appendChild(el);
+    });
+
+    // wire actions
+    grid.querySelectorAll('.add').forEach(b=>b.addEventListener('click',()=>addToCart(Number(b.dataset.id))));
+    grid.querySelectorAll('.view').forEach(b=>b.addEventListener('click',()=>openModal(Number(b.dataset.id))));
+  }
+
+  // cart functions
+  function addToCart(id,qty=1){
+    const p = state.products.find(x=>x.id===id); if(!p) return;
+    const item = state.cart.find(i=>i.id===id);
+    if(item){item.qty += qty;} else {state.cart.push({id,qty});}
+    saveCart(); renderCart(); flashBadge();
+  }
+  function removeFromCart(id){state.cart = state.cart.filter(i=>i.id!==id); saveCart(); renderCart();}
+  function setQty(id,qty){const it=state.cart.find(i=>i.id===id); if(!it) return; it.qty = Math.max(1, qty); saveCart(); renderCart();}
+
+  function renderCart(){
+    const el = document.getElementById('cartList'); el.innerHTML='';
+    if(state.cart.length===0){el.innerHTML='<div class="muted" style="padding:16px">Your cart is empty.</div>'}
+    let subtotal=0;
+    state.cart.forEach(ci=>{
+      const p = state.products.find(x=>x.id===ci.id);
+      if(!p) return;
+      subtotal += p.price*ci.qty;
+      const row = document.createElement('div'); row.className='cart-item';
+      row.innerHTML = `
+        <img src="${p.img}" alt="${p.title}" />
+        <div style="flex:1">
+          <div style="font-weight:700">${p.title}</div>
+          <div class="muted">${formatPrice(p.price)}</div>
+        </div>
+        <div class="qty">
+          <button class="dec" data-id="${p.id}">−</button>
+          <div>${ci.qty}</div>
+          <button class="inc" data-id="${p.id}">+</button>
+          <button class="rm" data-id="${p.id}" title="Remove">✕</button>
+        </div>
+      `;
+      el.appendChild(row);
+    });
+    document.getElementById('subtotal').textContent = formatPrice(subtotal);
+
+    const count = state.cart.reduce((s,i)=>s+i.qty,0);
+    const badge = document.getElementById('cartCount');
+    if(count>0){badge.style.display='inline-block';badge.textContent = count;} else badge.style.display='none';
+
+    // wire cart buttons
+    el.querySelectorAll('.inc').forEach(b=>b.addEventListener('click',()=>{setQty(Number(b.dataset.id), (state.cart.find(i=>i.id==b.dataset.id).qty)+1)}));
+    el.querySelectorAll('.dec').forEach(b=>b.addEventListener('click',()=>{const id=Number(b.dataset.id);const it=state.cart.find(i=>i.id===id); if(it){setQty(id, it.qty-1)}}));
+    el.querySelectorAll('.rm').forEach(b=>b.addEventListener('click',()=>removeFromCart(Number(b.dataset.id))));
+  }
+
+  // simple modal
+  function openModal(id){const p = state.products.find(x=>x.id===id); if(!p) return;
+    const root = document.getElementById('modalRoot'); root.innerHTML = `
+      <div class="modal-backdrop" id="backdrop">
+        <div class="modal">
+          <div style="display:flex;gap:12px">
+            <div class="left" style="flex:1">
+              <img src="${p.img}" style="width:100%;height:320px;object-fit:cover;border-radius:10px" />
+              <div style="margin-top:8px" class="muted">${p.category} • ${p.stock>0?'In stock':'Out of stock'}</div>
+            </div>
+            <div class="right" style="flex:1">
+              <h2 style="margin-top:0">${p.title}</h2>
+              <div style="font-weight:800;margin:6px 0">${formatPrice(p.price)}</div>
+              <p class="muted">${p.desc}</p>
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <button id="modalAdd" class="btn">Add to cart</button>
+                <button id="modalClose" class="pill muted">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    root.style.display='block';
+    document.getElementById('backdrop').addEventListener('click', (e)=>{ if(e.target.id==='backdrop'){closeModal()} });
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalAdd').addEventListener('click', ()=>{addToCart(id); closeModal();});
+  }
+  function closeModal(){document.getElementById('modalRoot').style.display='none';document.getElementById('modalRoot').innerHTML=''}
+
+  // UI wiring
+  document.getElementById('search').addEventListener('input', (e)=>{state.filters.q=e.target.value;renderGrid();});
+  document.getElementById('category').addEventListener('change', (e)=>{state.filters.category=e.target.value;renderGrid();});
+  document.getElementById('sort').addEventListener('change', (e)=>{state.filters.sort=e.target.value;renderGrid();});
+  document.getElementById('inStockOnly').addEventListener('change', (e)=>{state.filters.inStock=e.target.checked;renderGrid();});
+
+  // cart open/close
+  document.getElementById('openCart').addEventListener('click', ()=>{document.getElementById('cartPanel').classList.add('open');});
+  document.getElementById('closeCart').addEventListener('click', ()=>{document.getElementById('cartPanel').classList.remove('open');});
+
+  document.getElementById('checkout').addEventListener('click', ()=>{
+    if(state.cart.length===0){alert('Your cart is empty. Add products to checkout.');return}
+    // simple checkout demo
+    const total = state.cart.reduce((s,i)=>s + (state.products.find(p=>p.id===i.id).price * i.qty),0);
+    if(confirm('Checkout — Total: ' + formatPrice(total) + '\nProceed with demo checkout?')){
+      // emulate success
+      alert('Thanks! Your order has been placed (demo).');
+      state.cart = []; saveCart(); renderCart(); document.getElementById('cartPanel').classList.remove('open');
+    }
+  });
+
+  function flashBadge(){ const b=document.getElementById('cartCount'); b.animate([{transform:'scale(0.9)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:280}) }
+
+  // initial render
+  renderGrid(); renderCart();
+
+  // small accessibility: keyboard shortcuts
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); document.getElementById('search').focus(); }
+    if(e.key==='c'){ document.getElementById('cartPanel').classList.toggle('open'); }
+  });
+
+  // lightweight analytics placeholder
+  console.log('Voltica demo store loaded — products:', state.products.length);
+  </script>
+</body>
+</html>
